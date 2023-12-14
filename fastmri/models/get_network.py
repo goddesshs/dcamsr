@@ -53,7 +53,7 @@ _arch_modules = [
     for file_name in arch_filenames
 ]
 
-def dynamic_instantiation(modules, net_name,scale):
+def dynamic_instantiation(modules, net_name,args):
     cls_type = net_name
     cls_ = None
     for module in modules:
@@ -62,9 +62,12 @@ def dynamic_instantiation(modules, net_name,scale):
             break
     if cls_ is None:
         raise ValueError('{} is not found.'.format(cls_type))
-    return cls_(None,scale=scale)
+    return cls_(**args)
 
 
-def define_network(net_name,scale):
-    net = dynamic_instantiation(_arch_modules, net_name,scale)
+def define_network(net_name,args):
+    net = dynamic_instantiation(_arch_modules, net_name, args)
     return net
+
+
+# define_network('DCAMSR')

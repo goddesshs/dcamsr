@@ -8,7 +8,7 @@ from torch.nn import functional as F
 import sys
 print(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 print(sys.path)
 import fastmri
 from fastmri import MriModule
@@ -69,7 +69,7 @@ class SRModule(MriModule):
         self.lr_gamma = lr_gamma
         self.weight_decay = weight_decay
         
-        self.network = define_network(self.net_name,kwargs)
+        self.network = define_network(net_name, kwargs)
         
         # a = torch.load('../../../DAMSR_log/DAMSR/knee/2x_SR/lightning_logs/version_0/checkpoints/epoch=27.ckpt')
         # for key in a['state_dict'].copy():
@@ -77,7 +77,7 @@ class SRModule(MriModule):
         # print(self.network.load_state_dict(a['state_dict']))
         
     def forward(self, Ref,Ref_SR,LR):
-        pdfs = self.network(LR.unsqueeze(1),Ref.unsqueeze(1),Ref_SR.unsqueeze(1))
+        pdfs = self.network(LR.unsqueeze(1),Ref.unsqueeze(1))
         pdfs = pdfs.squeeze(1)
         return pdfs
 
@@ -162,10 +162,13 @@ class SRModule(MriModule):
         # network params
         parser.add_argument("--ddp", default=1, type=int)
         
-        parser.add_argument("--in_chans", default=1, type=int)
-        parser.add_argument("--out_chans", default=1, type=int)
+        parser.add_argument("--in_channels", default=1, type=int)
+        # parser.add_argument("--in_channels", default=1, type=int)
+        parser.add_argument('--embed_dim', type=int, default=96, help='lr_width')
+        
+        parser.add_argument('--depth', type=int, default=4, help='lr_width')
+        parser.add_argument('--num_head', type=int, default=8, help='lr_width') 
         parser.add_argument("--chans", default=1, type=int)
-        parser.add_argument("--num_pool_layers", default=4, type=int)
         parser.add_argument("--drop_prob", default=0.0, type=float)
 
         # data params
@@ -177,10 +180,22 @@ class SRModule(MriModule):
         
 
         # training params (opt)
-        parser.add_argument("--lr", default=0.001, type=float)
-        parser.add_argument("--lr_step_size", default=40, type=int)
-        parser.add_argument("--lr_gamma", default=0.1, type=float)
-        parser.add_argument("--weight_decay", default=0.0, type=float)
+        # parser.add_argument("--lr", default=1e-4, type=float)
+        # parser.add_argument("--lr_step_size", default=10, type=int)
+        # parser.add_argument("--lr_gamma", default=0.1, type=float)
+        # parser.add_argument("--weight_decay", default=0.0, type=float)
+        
+        
+        parser.add_argument('--beta1', type=float, default=0.9, help='beta1 for ADAM')
+        parser.add_argument('--beta2', type=float, default=0.999, help='beta2 for ADAM')
+        
+        
+        #loss options
+        parser.add_argument('--freq_radius', type=float, default=10, help='freq loss weight')
+
+        parser.add_argument('--freq_weight', type=float, default=0.9, help='high freq loss weight')
+        parser.add_argument('--vgg_weight', type=float, default=0.02, help='style and content loss weight')
+        parser.add_argument('--freq_loss_weight', type=float, default=0.1, help='freq_loss_weight')
 
         return parser
 

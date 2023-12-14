@@ -24,6 +24,7 @@ class DCAT(nn.Module):
             num_heads: int = 8,
             dropout_rate: float = 0.1,
             pos_embed=True,
+            **kwargs
     ) -> None:
         """
         Args:
@@ -316,7 +317,7 @@ class Decoder(nn.Module):
 
     
 class DCAMSR(nn.Module):
-    def __init__(self, args,scale):
+    def __init__(self, scale=None, **kwargs):
         super().__init__()
         input_size =320
         in_chl = 1

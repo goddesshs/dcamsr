@@ -11,6 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": false,
+            "args": ["--net_name", "DCAMSR"],
             "env": {"CUDA_VISIBLE_DEVICES":"2"}
         }
     ]

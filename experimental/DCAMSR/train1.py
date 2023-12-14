@@ -14,10 +14,12 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 
 import torch
 from fastmri.data.mri_data import fetch_dir
-from experimental.DCAMSR.DCAMSR import SRModule 
+# from experimental.DCAMSR.DCAMSR import SRModule 
 # from MINet import SRModule 
 import pytorch_lightning as pl
 from pytorch_lightning.callbacks import ModelCheckpoint
+
+import importlib
 def main(args):
     """Main training routine."""
     # ------------------------
@@ -31,14 +33,18 @@ def main(args):
     # seed_everything(args.seed)
     torch.use_deterministic_algorithms(False)
     # torch.random.seed(1)
-    model = SRModule(**vars(args))
+    Module = importlib.import_module(f'experimental.DCAMSR.{args.net_name}')
+    
+    model = getattr(Module, 'SRModule', None)(**vars(args))
+    # model = SRModule(**vars(args))
+    
     print('batch_size: ', args.batch_size)
     # ------------------------
     # 2 INIT TRAINER
     # ------------------------
     # trainer = Trainer(accelerator="gpu", gpus=args.num_gpusdevices=[0,1]).from_argparse_args(args)
     # trainer = Trainer(gpus=args.num_gpus).from_argparse_args(args)
-    trainer = Trainer().from_argparse_args(args)
+    trainer = Trainer(accelerator="gpu").from_argparse_args(args)
 
     # ------------------------
     # 3 START TRAINING OR TEST
@@ -84,30 +90,40 @@ def build_args():
     
     # path_config = pathlib.Path.cwd() / "mriSR_dirs.yaml"
     upscale = 4
-    net_name = 'DCAMSR'
+    # net_name = 'DCAMSR'
     try:
         logdir = fetch_dir("log_path", path_config) 
     except:
         os.makedirs(logdir)
-    logdir = logdir / net_name / dataset_name / f"{upscale}x_SR"
     os.makedirs(logdir, exist_ok=True)
 
     parent_parser = ArgumentParser(add_help=False)
+    parent_parser.add_argument("--net_name", default="DCATMRSR", type=str)
+    
+    args, remaining_argv = parent_parser.parse_known_args()
 
-    parser = SRModule.add_model_specific_args(parent_parser)
+    net_name = args.net_name
+    net_name =args.net_name
+    logdir = logdir / net_name / dataset_name / f"{upscale}x_SR"
+    
+    # ar
+    Module = importlib.import_module(f'experimental.DCAMSR.{net_name}')
+    
+    module = getattr(Module, 'SRModule', None)
+    
+    parser = module.add_model_specific_args(parent_parser)
     parser = Trainer.add_argparse_args(parser)
+    
 
     num_gpus = 1
     backend = "ddp"
     batch_size = 4 if backend == "ddp" else num_gpus
-        
     # module config
     config = dict(
-        
         mask_type="random",
         center_fractions=[0.08],
         accelerations=[4],
-        lr=2*1e-4,
+        lr=1e-4,
         upscale=upscale,
         net_name=net_name,
         lr_step_size=40,
@@ -130,9 +146,6 @@ def build_args():
         
     config["num_gpus"] = num_gpus
     
-    # for key, value in config.items():
-        
-    
     parser.set_defaults(**config)
     # trainer config
     parser.set_defaults(
@@ -144,9 +157,9 @@ def build_args():
         seed=42,
         deterministic=True,
     )
-    
     parser.add_argument("--mode", default="train", type=str)
-    args = parser.parse_args()
+    
+    args = parser.parse_args(remaining_argv)
     
 
     return args
