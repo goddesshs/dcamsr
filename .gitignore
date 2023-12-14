@@ -1,0 +1,35 @@
+# Compiled source #
+###################
+*.o
+*.so
+*.pyc
+
+# Logs and temporaries #
+########################
+*.log
+*~
+.coverage
+
+# Folders #
+###########
+build/
+dist/
+*.egg-info/
+__pycache__/
+.eggs/
+
+
+exp/
+results/
+checkpoints/
+invp_results/
+dataset_sample/
+.ipynb_checkpoints/
+
+./*/.git
+
+*.pth
+*.png
+*.npy
+*.jpg
+
