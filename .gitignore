@@ -33,3 +33,4 @@ dataset_sample/
 *.npy
 *.jpg
 
+*ckpt
